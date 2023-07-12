@@ -376,10 +376,6 @@ class GenericTableView(QtWidgets.QTableView):
         """
         idx = self.currentIndex()
 
-        if self.multiple_selection:
-            idx_temp = set([x.row() for x in self.selectedIndexes()])
-            self.state[f"selected_batch_{self.row_name}"] = idx_temp
-
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]

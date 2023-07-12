@@ -192,7 +192,7 @@ class VideosDock(DockWidget):
         self.add_button(hb, "Toggle Grayscale", main_window.commands.toggleGrayscale)
         self.add_button(hb, "Show Video", self.table.activateSelected)
         self.add_button(hb, "Add Videos", main_window.commands.addVideo)
-        self.add_button(hb, "Remove Video", main_window.commands.removeVideo)
+        self.add_button(hb, "Remove Video", self.remove_video)
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
@@ -203,6 +203,13 @@ class VideosDock(DockWidget):
 
         video_edit_and_nav_buttons = self.create_video_edit_and_nav_buttons()
         self.wgt_layout.addWidget(video_edit_and_nav_buttons)
+
+    def remove_video(self):
+        """Remove videos from the table."""
+
+        video_idxs = set([qmodel_idx.row() for qmodel_idx in self.table.selectedIndexes()])
+        videos_to_remove = [self.table.model().original_items[idx] for idx in video_idxs]
+        self.main_window.commands.removeVideo(videos_to_remove)
 
 
 class SkeletonDock(DockWidget):
