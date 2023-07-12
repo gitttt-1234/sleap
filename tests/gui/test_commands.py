@@ -1,16 +1,16 @@
-from pathlib import PurePath, Path
+import pytest
 import shutil
 import sys
-from typing import List
 
-import pytest
-from qtpy.QtWidgets import QComboBox
+from pathlib import PurePath, Path
+from typing import List
 
 from sleap import Skeleton, Track
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
     ExportAnalysisFile,
+    RemoveVideo,
     ReplaceVideo,
     OpenSkeleton,
     SaveProjectAs,
@@ -90,26 +90,37 @@ def test_get_new_version_filename():
     )
 
 
-def test_remove_videos_batch(
+def test_RemoveVideo(
     centered_pair_predictions: Labels,
     small_robot_mp4_vid: Video,
     centered_pair_vid: Video,
     small_robot_3_frame_vid: Video,
 ):
-    labels = centered_pair_predictions.copy()
+    
+    # Rewrite the ask method of RemoveVideo to avoid GUI elements
+    def ask(obj: RemoveVideo, context: CommandContext, params: dict) -> bool:
+        return True
+    RemoveVideo.ask = ask
+    
+    # Add some extra videos to the labels
+    labels = centered_pair_predictions
     labels.add_video(small_robot_mp4_vid)
     labels.add_video(centered_pair_vid)
     labels.add_video(small_robot_3_frame_vid)
 
-    all_videos = list(labels.videos)
+    # Set up the command context to spoof the GUI state we want
+    video_idxs = [0, 2]
+    videos_to_remove = [labels.videos[i] for i in video_idxs]
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = labels.videos[0]
+
+    all_videos = labels.videos
     assert len(all_videos) == 4
 
     # Remove selected videos
-    idxs = [0, 2]
-    for idx in idxs:
-        labels.remove_video(all_videos[idx])
+    context.removeVideo(videos_to_remove)
 
-    assert len(list(labels.videos)) == 2
+    assert len(labels.videos) == 2
 
 
 @pytest.mark.parametrize("out_suffix", ["h5", "nix"])
